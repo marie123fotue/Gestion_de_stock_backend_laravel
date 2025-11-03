@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PostModel extends Model
 {
-     public static function getAll()
+     public  function getAll()
     {
         return [
             ["nom" => "Spaghetti gourmet", "description" => "Pâtes italiennes haut de gamme"],
