@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class CategorieController extends Controller
 {
@@ -12,8 +14,8 @@ class CategorieController extends Controller
      * GET /api/categories
      */
     public function index()
-    {   
-       return Categorie::with('produits')->get();
+    {
+        return Categorie::with('produits')->get();
     }
 
     /**
@@ -22,11 +24,34 @@ class CategorieController extends Controller
      */
     public function store(Request $request)
     {
-        // Valider les données reçues
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string'
+        // Créer un validateur personnalisé
+        $validator = Validator::make($request->all(), [
+            'nom' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z\s]+$/'
+            ],
+            'description' => 'nullable|string',
+
+
+        ], [
+            // Messages d'erreur personnalisés
+            'nom.required' => 'Le nom de la catégorie est obligatoire',
+            'nom.string' => 'Le nom doit être une chaîne de caractères',
+            'nom.max' => 'Le nom ne peut pas dépasser 255 caractères',
+            'description.string' => 'La description doit être une chaîne de caractères',
+            'nom.regex' => 'le nom ne doit pas contenir de caratere speciaux'
         ]);
+
+        // Vérifier si la validation échoue
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         // Créer la catégorie avec Eloquent
         $categorie = Categorie::create([
@@ -40,6 +65,7 @@ class CategorieController extends Controller
             'data' => $categorie
         ], 201);
     }
+
 
     /**
      * Afficher une catégorie spécifique
@@ -130,5 +156,4 @@ class CategorieController extends Controller
             'message' => 'Catégorie supprimée avec succès'
         ], 200);
     }
-    
 }
